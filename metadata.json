@@ -1,0 +1,5 @@
+{
+  "name": "Journeys Stock Room Locator",
+  "description": "Interactive inventory management and item locator for Journeys stock rooms with drag-and-drop organization.",
+  "requestFramePermissions": []
+}

@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: stockRoom
+    // Document ID: current
+    // Fields:
+    //   - locations: map (required) - Mapping of location IDs to RackLocation objects
+    //   - items: map (required) - Mapping of item IDs to InventoryItem objects
+    //   - updatedAt: timestamp (optional) - When the state was last updated
+    //   - updatedBy: string (optional) - UID of the user who last updated the state
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email == "bigaiagent@gmail.com" && request.auth.token.email_verified == true);
+    }
+
+    function isValidInventoryItem(item) {
+      return item is map &&
+        item.keys().hasAll(['id', 'brand', 'codes', 'category']) &&
+        item.id is string && item.id.size() > 0 && item.id.size() < 100 &&
+        item.brand is string && item.brand.size() > 0 && item.brand.size() < 100 &&
+        item.codes is string && item.codes.size() > 0 && item.codes.size() < 200 &&
+        item.category is string && item.category.size() > 0 && item.category.size() < 50;
+    }
+
+    function isValidRackLocation(location) {
+      return location is map &&
+        location.keys().hasAll(['id', 'name', 'items', 'type']) &&
+        location.id is string && location.id.size() > 0 && location.id.size() < 100 &&
+        location.name is string && location.name.size() > 0 && location.name.size() < 100 &&
+        location.items is list && location.items.size() < 1000 &&
+        location.type in ['wall', 'stand', 'section'];
+    }
+
+    function isValidStockRoomState(data) {
+      return data is map &&
+        data.keys().hasAll(['locations', 'items']) &&
+        data.locations is map &&
+        data.items is map &&
+        (data.get('updatedAt', request.time) is timestamp) &&
+        (data.get('updatedBy', request.auth.uid) is string);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /stockRoom/current {
+      // Allow authenticated users to read the current state
+      allow read: if isAuthenticated();
+      
+      // Only admins can update the current state
+      allow write: if isAdmin() && isValidStockRoomState(request.resource.data);
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

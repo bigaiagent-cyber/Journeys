@@ -1,0 +1,58 @@
+{
+  "entities": {
+    "InventoryItem": {
+      "title": "InventoryItem",
+      "description": "A single inventory item in the stock room",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "brand": { "type": "string" },
+        "codes": { "type": "string" },
+        "category": { "type": "string" }
+      },
+      "required": ["id", "brand", "codes", "category"]
+    },
+    "RackLocation": {
+      "title": "RackLocation",
+      "description": "A location (rack/wall) in the stock room",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "items": { 
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "type": { 
+          "type": "string",
+          "enum": ["wall", "stand", "section"]
+        }
+      },
+      "required": ["id", "name", "items", "type"]
+    },
+    "StockRoomState": {
+      "title": "StockRoomState",
+      "description": "The full state of the stock room",
+      "type": "object",
+      "properties": {
+        "locations": { 
+          "type": "object",
+          "additionalProperties": { "$ref": "RackLocation" }
+        },
+        "items": {
+          "type": "object",
+          "additionalProperties": { "$ref": "InventoryItem" }
+        },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "updatedBy": { "type": "string" }
+      },
+      "required": ["locations", "items"]
+    }
+  },
+  "firestore": {
+    "/stockRoom/current": {
+      "schema": "StockRoomState",
+      "description": "The current global state of the stock room"
+    }
+  }
+}
