@@ -19,7 +19,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy 
 } from '@dnd-kit/sortable';
-import { Search, Map as MapIcon, RotateCcw, Info, LogOut, LogIn, DoorOpen, Calculator, Plus, X, Save, ShieldCheck, User as UserIcon, Zap } from 'lucide-react';
+import { Search, Map as MapIcon, RotateCcw, Info, LogOut, LogIn, DoorOpen, Calculator, Plus, X, Save, ShieldCheck, User as UserIcon, Zap, ZoomIn, ZoomOut } from 'lucide-react';
 import { INITIAL_ITEMS, INITIAL_LOCATIONS } from './constants';
 import { Rack } from './components/Rack';
 import { ItemCard } from './components/ItemCard';
@@ -164,6 +164,7 @@ function StockRoomApp() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [view, setView] = useState<'map' | 'calculator' | 'list'>('map');
+  const [zoom, setZoom] = useState(1);
   const [isAddingToLocation, setIsAddingToLocation] = useState<string | null>(null);
   const [newItem, setNewItem] = useState({ brand: '', codes: '', category: '' });
   const [clonedState, setClonedState] = useState<StockRoomState | null>(null);
@@ -588,6 +589,28 @@ function StockRoomApp() {
             >
               <RotateCcw size={20} />
             </button>
+
+            {view === 'map' && (
+              <div className="flex bg-white border border-slate-200 p-1 rounded-xl shadow-sm">
+                <button 
+                  onClick={() => setZoom(prev => Math.max(0.5, prev - 0.1))}
+                  className="p-2 text-slate-600 hover:text-blue-600 transition-all"
+                  title="Zoom Out"
+                >
+                  <ZoomOut size={18} />
+                </button>
+                <div className="flex items-center px-2 text-[10px] font-black text-slate-400 min-w-[40px] justify-center">
+                  {Math.round(zoom * 100)}%
+                </div>
+                <button 
+                  onClick={() => setZoom(prev => Math.min(2, prev + 0.1))}
+                  className="p-2 text-slate-600 hover:text-blue-600 transition-all"
+                  title="Zoom In"
+                >
+                  <ZoomIn size={18} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
         </div>
@@ -665,9 +688,17 @@ function StockRoomApp() {
               </div>
             )}
 
-            <div className="relative bg-white border border-slate-200 rounded-3xl shadow-xl p-4 sm:p-6 md:p-10 overflow-x-auto">
+            <div className="relative bg-white border border-slate-200 rounded-3xl shadow-xl p-4 sm:p-6 md:p-10 overflow-auto">
               {/* Room Boundary & Labels */}
-              <div className="min-w-[1000px] relative h-[800px] border-4 border-slate-900 rounded-2xl p-8">
+              <div 
+                className="min-w-[1000px] relative h-[800px] border-4 border-slate-900 rounded-2xl p-8 transition-transform duration-200 ease-out"
+                style={{ 
+                  transform: `scale(${zoom})`,
+                  transformOrigin: 'top left',
+                  marginBottom: zoom < 1 ? `-${800 * (1 - zoom)}px` : '0',
+                  marginRight: zoom < 1 ? `-${1000 * (1 - zoom)}px` : '0'
+                }}
+              >
                 
                 {/* Top Row: Fire Exit & Washroom */}
                 <div className="absolute -top-1 left-12 px-6 py-2 bg-slate-900 text-white text-xs font-bold rounded-b-lg flex items-center gap-2">
